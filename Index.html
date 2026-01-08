@@ -61,17 +61,30 @@ const db = firebase.firestore();
         document.getElementById('optCreator').classList.toggle('active', role === 'creator');
     }
 
+    
     function handleAuth() {
-        const email = document.getElementById('email').value;
-        const pass = document.getElementById('password').value;
-        if(!email || !pass) { alert("Remplis tous les champs !"); return; }
-        
-        // Ici nous connecterons Firebase à l'étape suivante
-        alert("Bienvenue " + email + " ! Compte créé en tant que " + selectedRole);
-        // Simulation de redirection
-        window.location.href = (selectedRole === 'creator') ? 'dashboard_createur.html' : 'flux_fans.html';
-    }
-</script>
+    const email = document.getElementById('email').value;
+    const pass = document.getElementById('pass').value;
 
+    if (!email || !pass) {
+        alert("S'il vous plaît, remplissez tous les champs.");
+        return;
+    }
+
+    auth.createUserWithEmailAndPassword(email, pass)
+        .then((userCredential) => {
+            return db.collection("users").doc(userCredential.user.uid).set({
+                email: email,
+                role: selectedRole
+            });
+        })
+        .then(() => {
+            window.location.href = (selectedRole === 'creator') ? 'dashboard_createur.html' : 'flux_fans.html';
+        .catch((error) => {
+            alert("Erreur : " + error.message);
+        });
+}
+</script>
 </body>
 </html>
+
