@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KiltiPay - Mon Espace Créateur</title>
+    <style>
+        body { font-family: sans-serif; margin: 0; background: #f0f2f5; }
+        .nav { background: #0056b3; color: white; padding: 15px; text-align: center; font-weight: bold; }
+        .container { padding: 20px; }
+        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .btn-post { background: #28a745; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; }
+        .stats-grid { display: flex; gap: 10px; margin-bottom: 20px; }
+        .stat-box { flex: 1; background: #eef6ff; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid #d0e3ff; }
+        .stat-val { display: block; font-size: 20px; font-weight: bold; color: #0056b3; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
+        textarea { width: 100%; border: 1px solid #ddd; border-radius: 8px; padding: 10px; box-sizing: border-box; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="nav">KiltiPay Créateur</div>
+
+<div class="container">
+    <div class="stats-grid">
+        <div class="stat-box"><span class="stat-val">0</span><small>Abonnés</small></div>
+        <div class="stat-box"><span class="stat-val">0 HTG</span><small>Gains</small></div>
+    </div>
+
+    <div class="card">
+        <h3>Publier du contenu</h3>
+        <label>Message pour tes fans :</label>
+        <textarea placeholder="Quoi de neuf aujourd'hui ?" rows="3"></textarea>
+        
+        <label>Ajouter une Vidéo/Photo :</label>
+        <input type="file" style="margin-bottom: 15px;">
+        
+        <button class="btn-post" onclick="alert('En cours de téléchargement...')">PUBLIER (CONTENU RÉSERVÉ)</button>
+    </div>
+
+    <div class="card">
+        <h3>Tes publications</h3>
+        <p style="color: #777; text-align: center;">Tu n'as pas encore publié de contenu exclusif.</p>
+    </div>
+</div>
+
+</body>
+</html>
