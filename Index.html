@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KiltiPay | Bienvenue</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <style>
+        body { font-family: sans-serif; background: #0056b3; color: white; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .auth-container { background: white; color: #333; padding: 30px; border-radius: 20px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .logo { font-size: 32px; font-weight: bold; color: #0056b3; margin-bottom: 10px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+        .role-selector { display: flex; gap: 10px; margin: 15px 0; }
+        .role-option { flex: 1; padding: 10px; border: 2px solid #eee; border-radius: 10px; cursor: pointer; font-size: 14px; }
+        .role-option.active { border-color: #0056b3; background: #eef6ff; font-weight: bold; }
+        .btn-main { width: 100%; padding: 15px; background: #28a745; color: white; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="auth-container">
+    <div class="logo">KiltiPay</div>
+    <p>Soutenez vos talents haïtiens préférés</p>
+    
+    <div id="loginForm">
+        <input type="email" id="email" placeholder="Email">
+        <input type="password" id="password" placeholder="Mot de passe">
+        
+        <p style="font-size: 0.9em; font-weight: bold;">Je suis un :</p>
+        <div class="role-selector">
+            <div class="role-option active" id="optFan" onclick="setRole('fan')">🔥 Fan / Abonné</div>
+            <div class="role-option" id="optCreator" onclick="setRole('creator')">🎨 Créateur</div>
+        </div>
+        
+        <button class="btn-main" onclick="handleAuth()">COMMENCER</button>
+        <p style="font-size: 0.8em; color: #777; margin-top: 15px;">En 2026, vivez de votre passion.</p>
+    </div>
+</div>
+
+<script>
+    let selectedRole = 'fan';
+
+    function setRole(role) {
+        selectedRole = role;
+        document.getElementById('optFan').classList.toggle('active', role === 'fan');
+        document.getElementById('optCreator').classList.toggle('active', role === 'creator');
+    }
+
+    function handleAuth() {
+        const email = document.getElementById('email').value;
+        const pass = document.getElementById('password').value;
+        if(!email || !pass) { alert("Remplis tous les champs !"); return; }
+        
+        // Ici nous connecterons Firebase à l'étape suivante
+        alert("Bienvenue " + email + " ! Compte créé en tant que " + selectedRole);
+        // Simulation de redirection
+        window.location.href = (selectedRole === 'creator') ? 'dashboard_createur.html' : 'flux_fans.html';
+    }
+</script>
+
+</body>
+</html>
