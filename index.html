@@ -3,23 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KiltiPay - Débats</title>
+    <title>KiltiPay - Live Feed</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <style>
-        body { font-family: sans-serif; background-color: #1a4da1; color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .container { background: white; color: #333; padding: 25px; border-radius: 20px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-        .logo { font-size: 32px; font-weight: bold; color: #1a4da1; margin-bottom: 10px; }
+        body { font-family: sans-serif; background-color: #1a4da1; color: white; display: flex; justify-content: center; padding-top: 20px; min-height: 100vh; margin: 0; }
+        .container { background: white; color: #333; padding: 20px; border-radius: 20px; width: 95%; max-width: 450px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); height: fit-content; }
+        .logo { font-size: 28px; font-weight: bold; color: #1a4da1; margin-bottom: 5px; }
         input, textarea { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
-        textarea { height: 80px; resize: none; }
-        .role-selector { display: flex; gap: 10px; margin: 15px 0; }
-        .role-option { flex: 1; padding: 10px; border: 2px solid #ddd; border-radius: 10px; cursor: pointer; font-size: 14px; background: #f9f9f9; }
-        .role-option.active { border-color: #1a4da1; background-color: #f0f4ff; font-weight: bold; }
-        .btn-main { width: 100%; padding: 15px; background-color: #5cb85c; color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; }
+        textarea { height: 60px; resize: none; }
+        .btn-main { width: 100%; padding: 12px; background-color: #5cb85c; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; }
         #dashboard { display: none; }
-        .post { background: #f4f4f4; padding: 15px; border-radius: 10px; margin-top: 20px; text-align: left; border-left: 5px solid #1a4da1; }
-        .comment-box { margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; }
+        
+        /* Styles pour le Fil d'Actualité */
+        #feed { margin-top: 20px; max-height: 400px; overflow-y: auto; text-align: left; }
+        .message-card { background: #f9f9f9; padding: 12px; border-radius: 10px; margin-bottom: 10px; border-left: 4px solid #1a4da1; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .message-user { font-size: 11px; color: #1a4da1; font-weight: bold; margin-bottom: 5px; }
+        .message-text { font-size: 14px; color: #333; line-height: 1.4; }
     </style>
 </head>
 <body>
@@ -28,36 +29,30 @@
     <div class="logo">KiltiPay</div>
 
     <div id="authSection">
-        <p>Soutenez vos talents haïtiens préférés</p>
+        <p>Soutenez vos talents haïtiens</p>
         <input type="email" id="email" placeholder="Email">
         <input type="password" id="password" placeholder="Mot de passe">
-        <div class="role-selector">
-            <div class="role-option active" id="optFan" onclick="setRole('fan')">🔥 Fan</div>
-            <div class="role-option" id="optCreator" onclick="setRole('creator')">🎨 Créateur</div>
-        </div>
         <button class="btn-main" onclick="handleAuth()">COMMENCER</button>
     </div>
 
     <div id="dashboard">
-        <h3 style="color: #1a4da1; margin-bottom: 5px;">Bienvenue !</h3>
-        <p id="userGreeting" style="font-size: 12px; color: #666;"></p>
+        <p id="userGreeting" style="font-size: 11px; color: #666;"></p>
         
-        <div class="post">
-            <strong>📢 Débat Socio-Politique :</strong>
-            <p style="font-size: 14px;">Comment améliorer la visibilité des artistes haïtiens à l'international ?</p>
-            
-            <div class="comment-box">
-                <textarea id="commentInput" placeholder="Votre avis sur ce sujet..."></textarea>
-                <button class="btn-main" style="padding: 10px; font-size: 14px;" onclick="sendComment()">PUBLIER MON AVIS</button>
-            </div>
+        <div style="background: #eef2f7; padding: 15px; border-radius: 15px;">
+            <strong style="font-size: 14px;">📢 Débat : Comment booster notre culture ?</strong>
+            <textarea id="commentInput" placeholder="Votre avis..."></textarea>
+            <button class="btn-main" style="background-color: #1a4da1;" onclick="sendComment()">PUBLIER</button>
         </div>
 
-        <button class="btn-main" style="background-color: #d9534f; margin-top: 20px; height: 40px; padding: 5px;" onclick="logout()">Déconnexion</button>
+        <div id="feed">
+            <p style="text-align:center; font-size: 12px; color: #999;">Chargement des débats...</p>
+        </div>
+
+        <button class="btn-main" style="background-color: #d9534f; margin-top: 20px; font-size: 12px;" onclick="logout()">Déconnexion</button>
     </div>
 </div>
 
 <script>
-    // Config technique "kashpay-app"
     const firebaseConfig = {
         apiKey: "AIzaSyCUy2bLdARmHnKseXFqk39NQSNy6oA8ibo",
         authDomain: "kashpay-app.firebaseapp.com",
@@ -70,43 +65,51 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
-    let selectedRole = 'fan';
-
-    function setRole(role) {
-        selectedRole = role;
-        document.getElementById('optFan').classList.toggle('active', role === 'fan');
-        document.getElementById('optCreator').classList.toggle('active', role === 'creator');
-    }
 
     function handleAuth() {
         const email = document.getElementById('email').value.trim();
         const pass = document.getElementById('password').value;
         auth.createUserWithEmailAndPassword(email, pass)
-            .then((userCredential) => {
-                db.collection("users").doc(userCredential.user.uid).set({ email: email, role: selectedRole })
-                .then(() => { showDashboard(email); });
-            })
-            .catch((error) => { alert(error.message); });
+            .then((user) => { showDashboard(email); })
+            .catch(() => {
+                auth.signInWithEmailAndPassword(email, pass)
+                    .then(() => { showDashboard(email); })
+                    .catch((err) => alert(err.message));
+            });
     }
 
     function showDashboard(email) {
         document.getElementById('authSection').style.display = 'none';
         document.getElementById('dashboard').style.display = 'block';
         document.getElementById('userGreeting').innerText = "Connecté : " + email;
+        loadFeed(); // Lancer le fil d'actualité
     }
 
-    // Fonction pour envoyer l'avis dans Firebase
     function sendComment() {
         const text = document.getElementById('commentInput').value;
-        if(text === "") return alert("Écrivez quelque chose !");
-        
+        if(!text) return;
         db.collection("debats").add({
             message: text,
             user: auth.currentUser.email,
-            date: new Date()
-        }).then(() => {
-            alert("Votre avis a été publié avec succès sur KiltiPay !");
-            document.getElementById('commentInput').value = "";
+            date: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(() => { document.getElementById('commentInput').value = ""; });
+    }
+
+    // FONCTION MAGIQUE : LIT LES MESSAGES EN TEMPS RÉEL
+    function loadFeed() {
+        db.collection("debats").orderBy("date", "desc")
+          .onSnapshot((snapshot) => {
+            const feedDiv = document.getElementById('feed');
+            feedDiv.innerHTML = ""; // Vider avant de recharger
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                feedDiv.innerHTML += `
+                    <div class="message-card">
+                        <div class="message-user">${data.user}</div>
+                        <div class="message-text">${data.message}</div>
+                    </div>
+                `;
+            });
         });
     }
 
