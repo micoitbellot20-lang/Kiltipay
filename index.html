@@ -8,13 +8,13 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <style>
-        body { font-family: sans-serif; background-color: #1a4da1; color: white; display: flex; justify-content: center; align-items: center; height: height: 100vh; margin: 0; }
+        body { font-family: sans-serif; background-color: #1a4da1; color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
         .auth-container { background: white; color: #333; padding: 30px; border-radius: 20px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
         .logo { font-size: 32px; font-weight: bold; color: #1a4da1; margin-bottom: 10px; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
         .role-selector { display: flex; gap: 10px; margin: 20px 0; }
-        .role-option { flex: 1; padding: 10px; border: 2px solid #ddd; border-radius: 10px; cursor: pointer; font-size: 14px; }
-        .role-option.active { border-color: #1a4da1; background-color: #f0f4ff; }
+        .role-option { flex: 1; padding: 10px; border: 2px solid #ddd; border-radius: 10px; cursor: pointer; font-size: 14px; background: #f9f9f9; }
+        .role-option.active { border-color: #1a4da1; background-color: #f0f4ff; font-weight: bold; }
         .btn-main { width: 100%; padding: 15px; background-color: #5cb85c; color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 10px; }
     </style>
 </head>
@@ -26,9 +26,9 @@
     
     <div id="loginForm">
         <input type="email" id="email" placeholder="Email">
-        <input type="password" id="password" placeholder="Mot de passe">
+        <input type="password" id="password" placeholder="Mot de passe (6+ caractères)">
         
-        <p style="font-size: 0.9em; font-weight: bold;">Je suis un :</p>
+        <p style="font-size: 0.9em; font-weight: bold; margin-bottom: 5px;">Je suis un :</p>
         <div class="role-selector">
             <div class="role-option active" id="optFan" onclick="setRole('fan')">🔥 Fan / Abonné</div>
             <div class="role-option" id="optCreator" onclick="setRole('creator')">🎨 Créateur</div>
@@ -40,14 +40,14 @@
 </div>
 
 <script>
-    // Ta configuration Firebase (Vérifiée d'après tes images)
+    // Configuration utilisant l'identifiant technique correct "kashpay-app"
     const firebaseConfig = {
-        apiKey: "AIzaSyCPdB84hH159tiuKS1F7unAN1W0pI9touc",
-        authDomain: "kiltipay.firebaseapp.com",
-        projectId: "kiltipay",
-        storageBucket: "kiltipay.firebasestorage.app",
-        messagingSenderId: "88374593630",
-        appId: "1:88374593630:web:a49bb3640cd3b9c61bfccf"
+        apiKey: "AIzaSyCUy2bLdARmHnKseXFqk39NQSNy6oA8ibo",
+        authDomain: "kashpay-app.firebaseapp.com",
+        projectId: "kashpay-app",
+        storageBucket: "kashpay-app.firebasestorage.app",
+        messagingSenderId: "591201390460",
+        appId: "1:591201390460:web:4a5317716dc6be02789ef9"
     };
 
     // Initialisation
@@ -64,7 +64,7 @@
     }
 
     function handleAuth() {
-        const email = document.getElementById('email').value;
+        const email = document.getElementById('email').value.trim();
         const pass = document.getElementById('password').value;
 
         if (!email || !pass) {
@@ -74,19 +74,17 @@
 
         auth.createUserWithEmailAndPassword(email, pass)
             .then((userCredential) => {
-                // Enregistrement dans Firestore
                 db.collection("users").doc(userCredential.user.uid).set({
                     email: email,
                     role: selectedRole,
-                    createdAt: new Date()
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 }).then(() => {
                     alert("Succès ! Compte créé pour : " + email);
-                    // Ici tu pourras ajouter une redirection plus tard
                 });
             })
             .catch((error) => {
-                // Affiche l'erreur exacte (ex: mot de passe trop court)
-                alert("Erreur : " + error.message);
+                // Cette alerte te dira si le mot de passe est trop court
+                alert("Erreur Firebase : " + error.message);
             });
     }
 </script>
