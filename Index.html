@@ -39,6 +39,20 @@
 </div>
 
 <script>
+    const firebaseConfig = {
+  apiKey: "AIzaSyCPdB84hH159tiuKSlF7unAN1W0pI9touc",
+  authDomain: "kiltipay.firebaseapp.com",
+  projectId: "kiltipay",
+  storageBucket: "kiltipay.firebasestorage.app",
+  messagingSenderId: "883574593630",
+  appId: "1:883574593630:web:a49bb3640cd3b9c61bfccf"
+};
+
+// Initialisation de Firebase
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
     let selectedRole = 'fan';
 
     function setRole(role) {
