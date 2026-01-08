@@ -3,18 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KiltiPay | Bienvenue</title>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <title>KiltiPay</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <style>
-        body { font-family: sans-serif; background: #0056b3; color: white; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        .auth-container { background: white; color: #333; padding: 30px; border-radius: 20px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
-        .logo { font-size: 32px; font-weight: bold; color: #0056b3; margin-bottom: 10px; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
-        .role-selector { display: flex; gap: 10px; margin: 15px 0; }
-        .role-option { flex: 1; padding: 10px; border: 2px solid #eee; border-radius: 10px; cursor: pointer; font-size: 14px; }
-        .role-option.active { border-color: #0056b3; background: #eef6ff; font-weight: bold; }
-        .btn-main { width: 100%; padding: 15px; background: #28a745; color: white; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 10px; }
+        body { font-family: sans-serif; background-color: #1a4da1; color: white; display: flex; justify-content: center; align-items: center; height: height: 100vh; margin: 0; }
+        .auth-container { background: white; color: #333; padding: 30px; border-radius: 20px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .logo { font-size: 32px; font-weight: bold; color: #1a4da1; margin-bottom: 10px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .role-selector { display: flex; gap: 10px; margin: 20px 0; }
+        .role-option { flex: 1; padding: 10px; border: 2px solid #ddd; border-radius: 10px; cursor: pointer; font-size: 14px; }
+        .role-option.active { border-color: #1a4da1; background-color: #f0f4ff; }
+        .btn-main { width: 100%; padding: 15px; background-color: #5cb85c; color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -32,26 +33,27 @@
             <div class="role-option active" id="optFan" onclick="setRole('fan')">🔥 Fan / Abonné</div>
             <div class="role-option" id="optCreator" onclick="setRole('creator')">🎨 Créateur</div>
         </div>
-        
+
         <button class="btn-main" onclick="handleAuth()">COMMENCER</button>
         <p style="font-size: 0.8em; color: #777; margin-top: 15px;">En 2026, vivez de votre passion.</p>
     </div>
 </div>
 
 <script>
+    // Ta configuration Firebase (Vérifiée d'après tes images)
     const firebaseConfig = {
-  apiKey: "AIzaSyCPdB84hH159tiuKSlF7unAN1W0pI9touc",
-  authDomain: "kiltipay.firebaseapp.com",
-  projectId: "kiltipay",
-  storageBucket: "kiltipay.firebasestorage.app",
-  messagingSenderId: "883574593630",
-  appId: "1:883574593630:web:a49bb3640cd3b9c61bfccf"
-};
+        apiKey: "AIzaSyCPdB84hH159tiuKS1F7unAN1W0pI9touc",
+        authDomain: "kiltipay.firebaseapp.com",
+        projectId: "kiltipay",
+        storageBucket: "kiltipay.firebasestorage.app",
+        messagingSenderId: "88374593630",
+        appId: "1:88374593630:web:a49bb3640cd3b9c61bfccf"
+    };
 
-// Initialisation de Firebase
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
+    // Initialisation
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
 
     let selectedRole = 'fan';
 
@@ -61,30 +63,33 @@ const db = firebase.firestore();
         document.getElementById('optCreator').classList.toggle('active', role === 'creator');
     }
 
-    
     function handleAuth() {
-    const email = document.getElementById('email').value;
-    const pass = document.getElementById('pass').value;
+        const email = document.getElementById('email').value;
+        const pass = document.getElementById('password').value;
 
-    if (!email || !pass) {
-        alert("S'il vous plaît, remplissez tous les champs.");
-        return;
-    }
+        if (!email || !pass) {
+            alert("Merci de remplir tous les champs.");
+            return;
+        }
 
-    auth.createUserWithEmailAndPassword(email, pass)
-        .then((userCredential) => {
-            return db.collection("users").doc(userCredential.user.uid).set({
-                email: email,
-                role: selectedRole
+        auth.createUserWithEmailAndPassword(email, pass)
+            .then((userCredential) => {
+                // Enregistrement dans Firestore
+                db.collection("users").doc(userCredential.user.uid).set({
+                    email: email,
+                    role: selectedRole,
+                    createdAt: new Date()
+                }).then(() => {
+                    alert("Succès ! Compte créé pour : " + email);
+                    // Ici tu pourras ajouter une redirection plus tard
+                });
+            })
+            .catch((error) => {
+                // Affiche l'erreur exacte (ex: mot de passe trop court)
+                alert("Erreur : " + error.message);
             });
-        })
-        .then(() => {
-            window.location.href = (selectedRole === 'creator') ? 'dashboard_createur.html' : 'flux_fans.html';
-        .catch((error) => {
-            alert("Erreur : " + error.message);
-        });
-}
+    }
 </script>
+
 </body>
 </html>
-
