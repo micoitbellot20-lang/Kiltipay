@@ -3,44 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KiltiPay</title>
+    <title>KiltiPay - Dashboard</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <style>
         body { font-family: sans-serif; background-color: #1a4da1; color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .auth-container { background: white; color: #333; padding: 30px; border-radius: 20px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .container { background: white; color: #333; padding: 30px; border-radius: 20px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
         .logo { font-size: 32px; font-weight: bold; color: #1a4da1; margin-bottom: 10px; }
         input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
         .role-selector { display: flex; gap: 10px; margin: 20px 0; }
         .role-option { flex: 1; padding: 10px; border: 2px solid #ddd; border-radius: 10px; cursor: pointer; font-size: 14px; background: #f9f9f9; }
         .role-option.active { border-color: #1a4da1; background-color: #f0f4ff; font-weight: bold; }
         .btn-main { width: 100%; padding: 15px; background-color: #5cb85c; color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        #dashboard { display: none; } /* Caché par défaut */
+        .post { background: #f4f4f4; padding: 15px; border-radius: 10px; margin-top: 20px; text-align: left; border-left: 5px solid #1a4da1; }
     </style>
 </head>
 <body>
 
-<div class="auth-container">
+<div class="container">
     <div class="logo">KiltiPay</div>
-    <p>Soutenez vos talents haïtiens préférés</p>
-    
-    <div id="loginForm">
+
+    <div id="authSection">
+        <p>Soutenez vos talents haïtiens préférés</p>
         <input type="email" id="email" placeholder="Email">
-        <input type="password" id="password" placeholder="Mot de passe (6+ caractères)">
+        <input type="password" id="password" placeholder="Mot de passe">
         
-        <p style="font-size: 0.9em; font-weight: bold; margin-bottom: 5px;">Je suis un :</p>
+        <p style="font-size: 0.9em; font-weight: bold;">Je suis un :</p>
         <div class="role-selector">
-            <div class="role-option active" id="optFan" onclick="setRole('fan')">🔥 Fan / Abonné</div>
+            <div class="role-option active" id="optFan" onclick="setRole('fan')">🔥 Fan</div>
             <div class="role-option" id="optCreator" onclick="setRole('creator')">🎨 Créateur</div>
         </div>
-
         <button class="btn-main" onclick="handleAuth()">COMMENCER</button>
-        <p style="font-size: 0.8em; color: #777; margin-top: 15px;">En 2026, vivez de votre passion.</p>
+    </div>
+
+    <div id="dashboard">
+        <h2 style="color: #1a4da1;">Bienvenue !</h2>
+        <p id="userGreeting" style="font-weight: bold;"></p>
+        <hr>
+        <div class="post">
+            <strong>📢 Débat du jour :</strong>
+            <p>Quel est le meilleur moyen de soutenir la culture haïtienne en 2026 ?</p>
+            <button style="font-size: 12px;">Participer au débat</button>
+        </div>
+        <button class="btn-main" style="background-color: #d9534f; margin-top: 30px;" onclick="logout()">Se déconnecter</button>
     </div>
 </div>
 
 <script>
-    // Configuration utilisant l'identifiant technique correct "kashpay-app"
+    // Config avec ton ID technique "kashpay-app"
     const firebaseConfig = {
         apiKey: "AIzaSyCUy2bLdARmHnKseXFqk39NQSNy6oA8ibo",
         authDomain: "kashpay-app.firebaseapp.com",
@@ -50,11 +62,9 @@
         appId: "1:591201390460:web:4a5317716dc6be02789ef9"
     };
 
-    // Initialisation
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
-
     let selectedRole = 'fan';
 
     function setRole(role) {
@@ -63,29 +73,32 @@
         document.getElementById('optCreator').classList.toggle('active', role === 'creator');
     }
 
+    // Gère l'inscription
     function handleAuth() {
         const email = document.getElementById('email').value.trim();
         const pass = document.getElementById('password').value;
-
-        if (!email || !pass) {
-            alert("Merci de remplir tous les champs.");
-            return;
-        }
 
         auth.createUserWithEmailAndPassword(email, pass)
             .then((userCredential) => {
                 db.collection("users").doc(userCredential.user.uid).set({
                     email: email,
-                    role: selectedRole,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    role: selectedRole
                 }).then(() => {
-                    alert("Succès ! Compte créé pour : " + email);
+                    showDashboard(email);
                 });
             })
-            .catch((error) => {
-                // Cette alerte te dira si le mot de passe est trop court
-                alert("Erreur Firebase : " + error.message);
-            });
+            .catch((error) => { alert(error.message); });
+    }
+
+    // Affiche l'écran d'accueil
+    function showDashboard(email) {
+        document.getElementById('authSection').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+        document.getElementById('userGreeting').innerText = "Connecté en tant que " + email;
+    }
+
+    function logout() {
+        auth.signOut().then(() => { location.reload(); });
     }
 </script>
 
