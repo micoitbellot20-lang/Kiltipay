@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KiltiStore - Agent IA Vendeur</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <style>
+        :root { --primary: #1a4da1; --agent-bg: #eef2f7; }
+        body { font-family: 'Arial', sans-serif; margin: 0; background: #f4f4f4; display: flex; justify-content: center; }
+        .store-container { width: 100%; max-width: 500px; background: white; min-height: 100vh; display: flex; flex-direction: column; }
+        
+        /* HEADER */
+        header { background: var(--primary); color: white; padding: 20px; text-align: center; font-weight: bold; }
+
+        /* ZONE AGENT IA */
+        .agent-header { display: flex; align-items: center; padding: 15px; background: var(--agent-bg); border-bottom: 1px solid #ddd; }
+        .agent-avatar { width: 40px; height: 40px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; margin-right: 10px; font-size: 20px; }
+        
+        #chat-window { flex: 1; padding: 15px; overflow-y: auto; height: 400px; display: flex; flex-direction: column; gap: 10px; }
+        .bubble { max-width: 80%; padding: 12px; border-radius: 15px; font-size: 14px; line-height: 1.4; }
+        .agent-bubble { background: var(--agent-bg); align-self: flex-start; border-bottom-left-radius: 2px; color: #333; }
+        .user-bubble { background: var(--primary); color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
+
+        /* INPUT AREA */
+        .input-area { padding: 15px; border-top: 1px solid #eee; display: flex; gap: 10px; }
+        input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 25px; outline: none; }
+        button { background: var(--primary); color: white; border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-size: 18px; }
+    </style>
+</head>
+<body>
+
+<div class="store-container">
+    <header>KiltiStore 🇭🇹</header>
+
+    <div class="agent-header">
+        <div class="agent-avatar">🤖</div>
+        <div>
+            <div style="font-weight: bold; font-size: 14px;">Agent Kilti</div>
+            <div style="font-size: 11px; color: green;">● Assistant de vente en ligne</div>
+        </div>
+    </div>
+
+    <div id="chat-window">
+        <div class="bubble agent-bubble">
+            Bonjour ! Je suis votre assistant IA. Je connais tout notre stock d'artisanat et de produits locaux. Que recherchez-vous aujourd'hui ?
+        </div>
+    </div>
+
+    <div class="input-area">
+        <input type="text" id="userInput" placeholder="Demandez quelque chose (ex: prix d'un chapeau)...">
+        <button onclick="askAgent()">➔</button>
+    </div>
+</div>
+
+<script>
+    // Liste des produits que l'Agent IA connaît par cœur
+    const products = [
+        { name: "Chapeau de Paille", price: 750, stock: 15, desc: "Chapeau traditionnel fait main en Haïti." },
+        { name: "Café Haïtien", price: 1200, stock: 50, desc: "Café pur arabica, torréfié localement." },
+        { name: "Peinture Naïve", price: 5000, stock: 5, desc: "Toile originale colorée représentant la vie rurale." }
+    ];
+
+    function askAgent() {
+        const inputField = document.getElementById('userInput');
+        const text = inputField.value.trim().toLowerCase();
+        if (!text) return;
+
+        addBubble(inputField.value, 'user-bubble');
+        inputField.value = "";
+
+        // Simulation de la réflexion de l'agent
+        setTimeout(() => {
+            let response = "Je n'ai pas bien compris, mais je peux vous renseigner sur nos chapeaux, notre café ou nos peintures !";
+
+            // Logique de l'agent : il cherche dans sa base de données
+            if (text.includes("prix") || text.includes("combien")) {
+                let found = products.find(p => text.includes(p.name.toLowerCase().split(' ')[0]));
+                if (found) {
+                    response = `Le prix du ${found.name} est de ${found.price} HTG. Il nous en reste ${found.stock} en stock. Voulez-vous l'ajouter au panier ?`;
+                } else {
+                    response = "Pour quel article souhaitez-vous connaître le prix ?";
+                }
+            } else if (text.includes("merci")) {
+                response = "À votre service ! N'hésitez pas si vous avez d'autres questions.";
+            }
+
+            addBubble(response, 'agent-bubble');
+        }, 1000);
+    }
+
+    function addBubble(text, className) {
+        const win = document.getElementById('chat-window');
+        const div = document.createElement('div');
+        div.className = `bubble ${className}`;
+        div.innerText = text;
+        win.appendChild(div);
+        win.scrollTop = win.scrollHeight;
+    }
+</script>
+
+</body>
+</html>
