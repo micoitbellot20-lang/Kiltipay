@@ -2,96 +2,97 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KiltiPay Pro - Live & Finance</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>KiltiPay - TikTok Style</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <style>
-        :root { --blue: #1a4da1; --green: #28a745; --red: #e74c3c; --bg: #f0f2f5; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--blue); margin: 0; display: flex; justify-content: center; }
-        .app-container { width: 100%; max-width: 500px; background: white; min-height: 100vh; position: relative; padding-bottom: 80px; overflow-x: hidden; }
+        :root { --tiktok-red: #FE2C55; --tiktok-blue: #25F4EE; --dark: #010101; }
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: black; font-family: 'ProximaNova', sans-serif; }
         
-        /* HEADER & WALLET */
-        header { background: var(--blue); color: white; padding: 15px; display: flex; justify-content: space-between; position: sticky; top: 0; z-index: 1000; font-weight: bold; }
-        .wallet-box { background: linear-gradient(135deg, #1e3c72, #2a5298); color: white; margin: 15px; padding: 25px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
-        
-        /* CAMERA / LIVE SECTION */
-        .live-preview { margin: 15px; background: #000; border-radius: 20px; height: 250px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
-        video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
-        .live-label { position: absolute; top: 15px; left: 15px; background: var(--red); color: white; padding: 5px 12px; border-radius: 5px; font-size: 12px; font-weight: bold; animation: pulse 1.5s infinite; }
-        
-        /* CHAT SECTION */
-        .chat-area { margin: 0 15px 15px; background: #f8f9fa; border-radius: 15px; border: 1px solid #eee; }
-        #chatList { height: 120px; overflow-y: auto; padding: 10px; font-size: 13px; }
-        .chat-msg { margin-bottom: 8px; border-bottom: 1px solid #f1f1f1; padding-bottom: 4px; }
+        /* Conteneur principal style TikTok */
+        .feed-container { height: 100vh; scroll-snap-type: y mandatory; overflow-y: scroll; scroll-behavior: smooth; }
+        .slide { height: 100vh; scroll-snap-align: start; position: relative; background: #000; }
 
-        /* TRANSACTION HISTORY */
-        .history-section { margin: 20px 15px; }
-        .tx-card { background: white; border: 1px solid #eee; padding: 12px; border-radius: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
-        .tx-info { font-size: 12px; }
-        .tx-amount { font-weight: bold; font-size: 14px; }
-        .tx-sent { color: var(--red); }
-        .tx-received { color: var(--green); }
+        /* Vidéo / Caméra Plein Écran */
+        .video-content { width: 100%; height: 100%; object-fit: cover; }
+        .live-badge { position: absolute; top: 20px; left: 20px; background: var(--tiktok-red); color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; }
 
-        /* POSTS & FEED */
-        .post-card { border-top: 8px solid var(--bg); padding: 15px; }
-        .btn-tip { color: var(--green); border: 1px solid var(--green); padding: 6px 15px; border-radius: 20px; font-size: 12px; cursor: pointer; font-weight: bold; }
-        
-        @keyframes pulse { 50% { opacity: 0.5; } }
-        nav { position: fixed; bottom: 0; width: 100%; max-width: 500px; background: white; display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid #eee; font-size: 22px; }
+        /* Barre latérale d'actions */
+        .side-bar { position: absolute; right: 10px; bottom: 120px; display: flex; flex-direction: column; align-items: center; gap: 20px; z-index: 100; }
+        .action-item { display: flex; flex-direction: column; align-items: center; color: white; font-size: 11px; cursor: pointer; }
+        .icon-circle { width: 50px; height: 50px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 5px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
+
+        /* Infos en bas */
+        .bottom-info { position: absolute; bottom: 90px; left: 15px; color: white; max-width: 70%; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
+        .user-name { font-weight: bold; margin-bottom: 5px; font-size: 16px; }
+
+        /* Overlay Historique & Portefeuille (Pop-up) */
+        #walletOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 1000; display: none; padding: 20px; box-sizing: border-box; }
+        .history-item { padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; }
+
+        /* Barre de navigation */
+        nav { position: fixed; bottom: 0; width: 100%; height: 70px; background: black; border-top: 0.5px solid #333; display: flex; justify-content: space-around; align-items: center; z-index: 500; }
+        .nav-btn { color: white; font-size: 24px; text-align: center; cursor: pointer; }
+        .plus-btn { background: white; color: black; padding: 5px 15px; border-radius: 10px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="app-container">
-    <div id="authSection" style="padding: 50px 25px; text-align: center;">
-        <h1 style="color: var(--blue); font-size: 45px; margin-bottom: 10px;">KiltiPay</h1>
-        <p style="color: #666; margin-bottom: 30px;">Finance & Culture Haïtienne</p>
-        <input type="email" id="email" placeholder="Email professionnel" style="width: 100%; padding: 15px; margin: 10px 0; border: 1px solid #ddd; border-radius: 10px;">
-        <input type="password" id="password" placeholder="Mot de passe" style="width: 100%; padding: 15px; margin: 10px 0; border: 1px solid #ddd; border-radius: 10px;">
-        <button onclick="handleAuth()" style="width:100%; padding:18px; background:var(--green); color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer; font-size:16px;">SE CONNECTER</button>
+<div id="loginScreen" style="background: white; height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:30px; text-align:center;">
+    <h1 style="font-size: 40px; color: var(--tiktok-red);">KiltiPay</h1>
+    <p>Rejoignez la révolution culturelle</p>
+    <input type="email" id="email" placeholder="Email" style="width:100%; padding:15px; margin:10px 0; border:1px solid #ddd; border-radius:8px;">
+    <input type="password" id="password" placeholder="Mot de passe" style="width:100%; padding:15px; margin:10px 0; border:1px solid #ddd; border-radius:8px;">
+    <button onclick="authAction()" style="width:100%; padding:15px; background:black; color:white; border-radius:8px; font-weight:bold;">Se connecter</button>
+</div>
+
+<div id="appUI" style="display:none;">
+    <div class="feed-container">
+        <div class="slide">
+            <div class="live-badge">EN DIRECT</div>
+            <video id="myCamera" class="video-content" autoplay playsinline muted></video>
+            
+            <div class="side-bar">
+                <div class="action-item" onclick="toggleWallet()">
+                    <div class="icon-circle">💰</div>
+                    <span id="displayBalance">--</span>
+                </div>
+                <div class="action-item" onclick="alert('Chat bientôt disponible sur ce profil')">
+                    <div class="icon-circle">💬</div>
+                    <span>Chat</span>
+                </div>
+                <div class="action-item" onclick="window.location.href='store.html'">
+                    <div class="icon-circle">🛒</div>
+                    <span>Store</span>
+                </div>
+            </div>
+
+            <div class="bottom-info">
+                <div class="user-name" id="profileName">Chargement...</div>
+                <div>Lancement du projet KiltiPay 🇭🇹 #Tech #Culture</div>
+            </div>
+        </div>
     </div>
 
-    <div id="dashboard" style="display:none;">
-        <header>
-            <span>KiltiPay 🇭🇹</span>
-            <button onclick="logout()" style="background:none; border:none; color:white; font-size:12px; cursor:pointer;">DÉCONNEXION</button>
-        </header>
-
-        <div class="wallet-box">
-            <small style="opacity: 0.8;">Solde de votre compte</small>
-            <div id="userBalance" style="font-size: 32px; font-weight: bold; margin-top: 5px;">-- HTG</div>
+    <div id="walletOverlay">
+        <h2 style="display:flex; justify-content:space-between;">Mon Portefeuille <span onclick="toggleWallet()" style="cursor:pointer;">✕</span></h2>
+        <div style="background: #f8f8f8; padding:20px; border-radius:15px; text-align:center;">
+            <small>Solde Actuel</small>
+            <h1 id="walletBalance" style="margin:5px 0;">0 HTG</h1>
         </div>
-
-        <div class="live-preview">
-            <div class="live-label">🔴 EN DIRECT</div>
-            <video id="webcam" autoplay playsinline></video>
-            <div style="position: absolute; bottom: 15px; display: flex; gap: 10px;">
-                <button onclick="startCamera()" style="background: var(--blue); color:white; border:none; padding:8px 15px; border-radius:20px; font-size:11px; cursor:pointer;">Activer Caméra</button>
-            </div>
-        </div>
-
-        <div class="chat-area">
-            <div id="chatList"></div>
-            <div style="padding: 10px; display: flex; gap: 5px; border-top: 1px solid #eee;">
-                <input type="text" id="chatInput" placeholder="Réagir au direct..." style="flex:1; padding:10px; border-radius:10px; border:1px solid #ddd;">
-                <button onclick="sendChat()" style="background:var(--blue); color:white; border:none; padding:10px 15px; border-radius:10px; cursor:pointer;">🚀</button>
-            </div>
-        </div>
-
-        <div class="history-section">
-            <h4 style="margin-bottom:10px; color:var(--blue);">Historique des transferts</h4>
-            <div id="txHistory">
-                <p style="font-size:12px; color:#999; text-align:center;">Aucune transaction récente</p>
-            </div>
-        </div>
-
-        <div id="liveFeed"></div>
-        <div style="height: 50px;"></div>
-
-        <nav><span>🏠</span><span>📽️</span><span>💸</span><span>👤</span></nav>
+        <h3 style="margin-top:30px;">Historique des Transactions</h3>
+        <div id="txList"></div>
     </div>
+
+    <nav>
+        <div class="nav-btn">🏠</div>
+        <div class="nav-btn">🔍</div>
+        <div class="nav-btn plus-btn" onclick="startCam()">+</div>
+        <div class="nav-btn">📥</div>
+        <div class="nav-btn" onclick="toggleWallet()">👤</div>
+    </nav>
 </div>
 
 <script>
@@ -107,125 +108,62 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    // AUTHENTIFICATION
-    function handleAuth() {
+    function authAction() {
         const e = document.getElementById('email').value;
         const p = document.getElementById('password').value;
-        auth.signInWithEmailAndPassword(e, p).then(() => showDashboard())
+        auth.signInWithEmailAndPassword(e, p).then(u => loadApp())
         .catch(() => auth.createUserWithEmailAndPassword(e, p).then(u => {
-            db.collection("users").doc(u.user.uid).set({ email: e, balance: 1000, uid: u.user.uid }); // 1000 HTG Bonus
-            showDashboard();
+            db.collection("users").doc(u.user.uid).set({ email: e, balance: 1000, uid: u.user.uid });
+            loadApp();
         }));
     }
 
-    function showDashboard() {
-        document.getElementById('authSection').style.display = 'none';
-        document.getElementById('dashboard').style.display = 'block';
+    function loadApp() {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('appUI').style.display = 'block';
+        
+        // Sync du solde
         db.collection("users").doc(auth.currentUser.uid).onSnapshot(doc => {
-            if(doc.exists) document.getElementById('userBalance').innerText = doc.data().balance + " HTG";
+            if(doc.exists) {
+                const bal = doc.data().balance + " HTG";
+                document.getElementById('displayBalance').innerText = bal;
+                document.getElementById('walletBalance').innerText = bal;
+                document.getElementById('profileName').innerText = "@" + doc.data().email.split('@')[0];
+            }
         });
-        loadFeed();
-        loadChat();
         loadHistory();
     }
 
-    // GESTION CAMÉRA
-    async function startCamera() {
+    async function startCam() {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-            document.getElementById('webcam').srcObject = stream;
-        } catch (err) {
-            alert("Erreur caméra : Veuillez autoriser l'accès.");
-        }
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
+            document.getElementById('myCamera').srcObject = stream;
+        } catch(e) { alert("Accès caméra refusé."); }
     }
 
-    // GESTION CHAT
-    function sendChat() {
-        const msg = document.getElementById('chatInput').value;
-        if(!msg) return;
-        db.collection("chat").add({ user: auth.currentUser.email, text: msg, date: new Date() });
-        document.getElementById('chatInput').value = "";
-    }
-
-    function loadChat() {
-        db.collection("chat").orderBy("date", "desc").limit(15).onSnapshot(snap => {
-            const list = document.getElementById('chatList');
-            list.innerHTML = "";
-            snap.forEach(doc => {
-                list.innerHTML += `<div class="chat-msg"><b>${doc.data().user.split('@')[0]}</b>: ${doc.data().text}</div>`;
-            });
-        });
-    }
-
-    // GESTION TRANSFERTS & HISTORIQUE
-    async function sendTip(receiverId, receiverEmail) {
-        if(receiverId === auth.currentUser.uid) return alert("C'est votre post !");
-        const userRef = db.collection("users").doc(auth.currentUser.uid);
-        const receiverRef = db.collection("users").doc(receiverId);
-        const userDoc = await userRef.get();
-        
-        if(userDoc.data().balance < 50) return alert("Solde insuffisant (Min 50 HTG)");
-
-        const batch = db.batch();
-        batch.update(userRef, { balance: firebase.firestore.FieldValue.increment(-50) });
-        batch.update(receiverRef, { balance: firebase.firestore.FieldValue.increment(50) });
-        
-        // Historique
-        const txId = db.collection("transactions").doc().id;
-        batch.set(db.collection("transactions").doc(txId), {
-            from: auth.currentUser.email,
-            to: receiverEmail,
-            fromUid: auth.currentUser.uid,
-            toUid: receiverId,
-            amount: 50,
-            date: new Date()
-        });
-
-        await batch.commit();
-        alert("Transfert réussi ! 50 HTG envoyés.");
+    function toggleWallet() {
+        const overlay = document.getElementById('walletOverlay');
+        overlay.style.display = (overlay.style.display === 'block') ? 'none' : 'block';
     }
 
     function loadHistory() {
-        // Voir les envois ET les réceptions
         db.collection("transactions")
           .where("fromUid", "==", auth.currentUser.uid)
           .orderBy("date", "desc").onSnapshot(snap => {
-            const box = document.getElementById('txHistory');
-            if(snap.empty) return;
-            box.innerHTML = "";
+            const list = document.getElementById('txList');
+            list.innerHTML = "";
             snap.forEach(doc => {
                 const tx = doc.data();
-                box.innerHTML += `
-                    <div class="tx-card">
-                        <div class="tx-info">
-                            <b>Soutien envoyé</b><br>
-                            <small>À: ${tx.to}</small>
-                        </div>
-                        <div class="tx-amount tx-sent">-50 HTG</div>
-                    </div>`;
+                list.innerHTML += `<div class="history-item">
+                    <span>Envoi à ${tx.to.split('@')[0]}</span>
+                    <b style="color:red;">- ${tx.amount} HTG</b>
+                </div>`;
             });
         });
     }
 
-    function loadFeed() {
-        db.collection("posts").orderBy("timestamp", "desc").onSnapshot(snap => {
-            const feed = document.getElementById('liveFeed');
-            feed.innerHTML = "";
-            snap.forEach(doc => {
-                const p = doc.data();
-                feed.innerHTML += `
-                    <div class="post-card">
-                        <div style="font-size:13px; font-weight:bold; color:var(--blue);">👤 ${p.author}</div>
-                        <p style="margin:8px 0; font-size:15px; color:#333;">${p.text}</p>
-                        <button class="btn-tip" onclick="sendTip('${p.authorId}', '${p.author}')">💰 Soutenir (50 HTG)</button>
-                    </div>`;
-            });
-        });
-    }
-
-    function logout() { auth.signOut().then(() => location.reload()); }
+    // Lancer la caméra automatiquement au chargement si possible
+    window.onload = () => { if(auth.currentUser) loadApp(); };
 </script>
 </body>
 </html>
-
-
