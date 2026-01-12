@@ -1,54 +1,208 @@
-// 1. FONCTION DE DON RAPIDE (TIP)
-async function sendTip() {
-    const amount = 50; // Montant fixe pour le test
-    const userRef = db.collection("users").doc(auth.currentUser.uid);
-    
-    try {
-        await db.runTransaction(async (transaction) => {
-            const doc = await transaction.get(userRef);
-            if (!doc.exists) return;
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>KiltiPay - Super App</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <style>
+        :root { --tiktok-red: #FE2C55; --tiktok-blue: #25F4EE; --dark: #010101; }
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: black; font-family: sans-serif; }
+        
+        /* Conteneur TikTok */
+        .feed-container { height: 100vh; scroll-snap-type: y mandatory; overflow-y: scroll; scroll-behavior: smooth; }
+        .slide { height: 100vh; scroll-snap-align: start; position: relative; background: #000; display: flex; align-items: center; justify-content: center; }
+
+        /* Vidéo / Caméra */
+        .video-content { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+        .live-badge { position: absolute; top: 50px; left: 20px; background: var(--tiktok-red); color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; z-index: 10; }
+
+        /* Barre latérale */
+        .side-bar { position: absolute; right: 10px; bottom: 150px; display: flex; flex-direction: column; align-items: center; gap: 20px; z-index: 100; }
+        .action-item { display: flex; flex-direction: column; align-items: center; color: white; font-size: 11px; cursor: pointer; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
+        .icon-circle { width: 50px; height: 50px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 5px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
+
+        /* Infos bas d'écran */
+        .bottom-info { position: absolute; bottom: 100px; left: 15px; color: white; max-width: 70%; text-shadow: 0 1px 3px rgba(0,0,0,0.8); z-index: 10; }
+        .user-name { font-weight: bold; margin-bottom: 5px; font-size: 16px; }
+
+        /* Portefeuille Overlay */
+        #walletOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 1000; display: none; padding: 25px; box-sizing: border-box; overflow-y: auto; }
+        .history-item { padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+
+        /* Navigation */
+        nav { position: fixed; bottom: 0; width: 100%; height: 80px; background: black; border-top: 0.5px solid #333; display: flex; justify-content: space-around; align-items: center; z-index: 500; padding-bottom: 15px; }
+        .nav-btn { color: #888; font-size: 10px; text-align: center; cursor: pointer; display: flex; flex-direction: column; gap: 5px; }
+        .nav-btn.active { color: white; }
+        .plus-btn { background: white; color: black !important; padding: 8px 20px; border-radius: 12px; font-weight: bold; font-size: 20px !important; }
+
+        /* Notifications */
+        .notif { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.9); color: white; padding: 12px 25px; border-radius: 30px; z-index: 2000; font-size: 14px; border: 1px solid var(--tiktok-blue); animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translate(-50%, -20px); } to { opacity: 1; transform: translate(-50%, 0); } }
+    </style>
+</head>
+<body>
+
+<div id="loginScreen" style="background: white; height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:30px; text-align:center;">
+    <h1 style="font-size: 45px; color: var(--tiktok-red);">KiltiPay</h1>
+    <p>Le futur du live culturel 🇭🇹</p>
+    <input type="email" id="email" placeholder="Email" style="width:100%; padding:15px; margin:10px 0; border:1px solid #ddd; border-radius:12px;">
+    <input type="password" id="password" placeholder="Mot de passe" style="width:100%; padding:15px; margin:10px 0; border:1px solid #ddd; border-radius:12px;">
+    <button onclick="authAction()" style="width:100%; padding:18px; background:black; color:white; border-radius:12px; font-weight:bold;">ACCÉDER</button>
+</div>
+
+<div id="appUI" style="display:none;">
+    <div class="feed-container" id="mainFeed">
+        <div class="slide">
+            <div class="live-badge">🔴 LIVE</div>
+            <video id="myCamera" class="video-content" autoplay playsinline muted></video>
             
-            const newBalance = doc.data().balance - amount;
-            if (newBalance < 0) throw "Solde insuffisant";
-            
-            transaction.update(userRef, { balance: newBalance });
-            
-            // Enregistre la transaction
-            const txRef = db.collection("transactions").doc();
-            transaction.set(txRef, {
-                fromUid: auth.currentUser.uid,
-                to: "Créateur Kilti",
-                amount: amount,
-                date: new Date()
+            <div class="side-bar">
+                <div class="action-item" onclick="sendTip()">
+                    <div class="icon-circle" style="background: var(--tiktok-red);">💰</div>
+                    <span id="displayBalance">--</span>
+                </div>
+                <div class="action-item" onclick="showNotification('Chat activé pour le live')">
+                    <div class="icon-circle">💬</div>
+                    <span>124</span>
+                </div>
+                <div class="action-item" onclick="window.location.href='store.html'">
+                    <div class="icon-circle">🛒</div>
+                    <span>Store IA</span>
+                </div>
+            </div>
+
+            <div class="bottom-info">
+                <div class="user-name" id="profileName">@utilisateur</div>
+                <div>Bienvenue sur KiltiPay ! Double-cliquez pour aimer ❤️</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="walletOverlay">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h2>Mon Compte</h2>
+            <button onclick="toggleWallet()" style="border:none; background:#eee; padding:10px 15px; border-radius:50%;">✕</button>
+        </div>
+        <div style="background: black; color:white; padding:30px; border-radius:20px; text-align:center; margin:20px 0;">
+            <small>Solde Disponible</small>
+            <h1 id="walletBalance" style="font-size:40px; margin:10px 0; color:var(--tiktok-blue);">0 HTG</h1>
+        </div>
+        <h3>Historique des Dons</h3>
+        <div id="txList"></div>
+    </div>
+
+    <nav>
+        <div class="nav-btn active" onclick="goToHome()">🏠<br>Accueil</div>
+        <div class="nav-btn" onclick="showNotification('Recherche bientôt disponible')">🔍<br>Découvrir</div>
+        <div class="nav-btn plus-btn" onclick="startCam()">+</div>
+        <div class="nav-btn" onclick="window.location.href='store.html'">🛒<br>Boutique</div>
+        <div class="nav-btn" onclick="toggleWallet()">👤<br>Profil</div>
+    </nav>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyCUy2bLdARmHnKseXFqk39NQSNy6oA8ibo",
+        authDomain: "kashpay-app.firebaseapp.com",
+        projectId: "kashpay-app",
+        storageBucket: "kashpay-app.firebasestorage.app",
+        messagingSenderId: "591201390460",
+        appId: "1:591201390460:web:4a5317716dc6be02789ef9"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    function authAction() {
+        const e = document.getElementById('email').value;
+        const p = document.getElementById('password').value;
+        auth.signInWithEmailAndPassword(e, p).then(() => loadApp())
+        .catch(() => auth.createUserWithEmailAndPassword(e, p).then(u => {
+            db.collection("users").doc(u.user.uid).set({ email: e, balance: 1000, uid: u.user.uid });
+            loadApp();
+        }));
+    }
+
+    function loadApp() {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('appUI').style.display = 'block';
+        db.collection("users").doc(auth.currentUser.uid).onSnapshot(doc => {
+            if(doc.exists) {
+                const bal = doc.data().balance + " HTG";
+                document.getElementById('displayBalance').innerText = bal;
+                document.getElementById('walletBalance').innerText = bal;
+                document.getElementById('profileName').innerText = "@" + doc.data().email.split('@')[0];
+            }
+        });
+        loadHistory();
+        setTimeout(startCam, 1000);
+    }
+
+    async function startCam() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
+            document.getElementById('myCamera').srcObject = stream;
+        } catch(e) { console.log("Caméra désactivée"); }
+    }
+
+    // FONCTION DON DE 50 HTG
+    async function sendTip() {
+        const amount = 50;
+        const userRef = db.collection("users").doc(auth.currentUser.uid);
+        try {
+            await db.runTransaction(async (t) => {
+                const doc = await t.get(userRef);
+                const newBal = doc.data().balance - amount;
+                if (newBal < 0) throw "Solde insuffisant";
+                t.update(userRef, { balance: newBal });
+                t.set(db.collection("transactions").doc(), {
+                    fromUid: auth.currentUser.uid,
+                    to: "Créateur Live",
+                    amount: amount,
+                    date: new Date()
+                });
+            });
+            showNotification("✅ Don de 50 HTG réussi !");
+        } catch (e) { showNotification("❌ Erreur: " + e); }
+    }
+
+    function showNotification(msg) {
+        const n = document.createElement('div');
+        n.className = "notif";
+        n.innerText = msg;
+        document.body.appendChild(n);
+        setTimeout(() => n.remove(), 2500);
+    }
+
+    function toggleWallet() {
+        const o = document.getElementById('walletOverlay');
+        o.style.display = (o.style.display === 'block') ? 'none' : 'block';
+    }
+
+    function goToHome() {
+        document.getElementById('walletOverlay').style.display = 'none';
+        document.getElementById('mainFeed').scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function loadHistory() {
+        db.collection("transactions").where("fromUid", "==", auth.currentUser.uid)
+          .orderBy("date", "desc").onSnapshot(snap => {
+            const list = document.getElementById('txList');
+            list.innerHTML = "";
+            snap.forEach(doc => {
+                const tx = doc.data();
+                list.innerHTML += `<div class="history-item">
+                    <span>Don au créateur</span>
+                    <b style="color:red;">- ${tx.amount} HTG</b>
+                </div>`;
             });
         });
-        showNotification("❤️ Don de 50 HTG envoyé !");
-    } catch (e) {
-        showNotification("❌ Erreur: " + e);
     }
-}
 
-// 2. EFFET DOUBLE TAP (LIKE)
-let lastTap = 0;
-document.addEventListener('touchend', function (e) {
-    const currentTime = new Date().getTime();
-    const tapLength = currentTime - lastTap;
-    if (tapLength < 300 && tapLength > 0) {
-        handleLike(e);
-    }
-    lastTap = currentTime;
-});
-
-function handleLike(e) {
-    showNotification("💖 Vous avez aimé cette vidéo");
-    // Ici on pourrait ajouter une animation de cœur qui monte
-}
-
-// 3. SYSTÈME DE NOTIFICATION
-function showNotification(msg) {
-    const notif = document.createElement('div');
-    notif.style = "position:fixed; top:20px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.8); color:white; padding:10px 20px; border-radius:20px; z-index:2000; font-size:14px; border:1px solid var(--tiktok-blue);";
-    notif.innerText = msg;
-    document.body.appendChild(notif);
-    setTimeout(() => notif.remove(), 2500);
-}
+    auth.onAuthStateChanged(user => { if(user) loadApp(); });
+</script>
+</body>
+</html>
